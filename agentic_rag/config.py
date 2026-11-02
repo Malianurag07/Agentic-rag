@@ -34,3 +34,6 @@ class Config:
     small_model: str = "claude-haiku-5-5"
     strong_model: str = "claude-opus-5-5"
     public_groups: tuple = field(default=("public",))
+    # document chunking (policy manuals, PDFs, Word files)
+    doc_chunk_words: int = 220          # paragraphs are packed up to about this many words
+    table_chunk_words: int = 160        # table rows are packed up to about this many words (header repeated on each chunk)

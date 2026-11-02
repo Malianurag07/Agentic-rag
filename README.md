@@ -17,7 +17,7 @@ python3 -m agentic_rag ask "What are the refund fraud checks?" --groups staff,pu
 python3 -m agentic_rag chat                         # follow-up questions work in a session
 python3 -m agentic_rag eval                         # run data/testset.jsonl
 python3 -m agentic_rag eval --testset data/holdout.jsonl --out reports/holdout.json
-python3 -m unittest discover -s tests               # 20 unit tests
+python3 -m unittest discover -s tests               # 41 unit tests
 ```
 
 ## How it maps to the plan
@@ -37,8 +37,55 @@ python3 -m unittest discover -s tests               # 20 unit tests
 | 6.8 Citations and faithfulness check | `Pipeline._respond`, `llm.unsupported` |
 | 7 Tools: calculator, planner for "compare X and Y" | `tools.py`, `Pipeline._plan` |
 | 8 Guardrails: step/time budget, loop detection, injection sanitizer, permissions, tracing | `Budget`, `tools.sanitize`, `Result.trace` |
+| 5 (documents) PDF / DOCX / TXT loaders, tree, chunking, SQLite | `loaders.py`, `pdf_loader.py`, `structure.py`, `chunker.py`, `sqlite_store.py`, `ingest_docs.py` |
 | 9 Evaluation: test set, per-type metrics | `evaluate.py`, `data/testset.jsonl`, `data/holdout.jsonl` |
 | 13 Configuration reference | `config.py` |
+
+## Ingesting PDF, Word and text files into SQLite
+
+```bash
+python3 -m agentic_rag ingest-docs "Rag testing doc.pdf" enterprise_company_policy_manual.docx enterprise_company_policy_manual.txt --reset
+python3 -m agentic_rag db-info                        # what is stored, per document
+python3 -m agentic_rag db-info --section 6.2          # the chunks of one subsection
+python3 -m agentic_rag db-info --search "FIDO2 MFA"   # keyword search (SQLite FTS5)
+```
+
+Pipeline: **load** (`loaders.py`, `pdf_loader.py`) -> **structure** (`structure.py`: Section = topic, numbered subsection =
+type) -> **chunk** (`chunker.py`) -> **SQLite** (`sqlite_store.py`: documents, sections, chunks, embeddings, FTS5 index)
+-> **embeddings**. Re-running skips unchanged files (by SHA-256) and replaces changed ones.
+
+What the chunker does: packs paragraphs to about 220 words on sentence boundaries; keeps each `MANDATORY CROSS-DOMAIN RULE`
+paragraph as its own chunk tagged with its rule id; renders table rows as `Column: value | Column: value`, one row per
+line, with the table title and column names repeated on every chunk; keeps charts as flagged figure chunks.
+`SqliteStore.load_store()` rebuilds the in-memory store the `Pipeline` queries.
+
+### Result on the three uploaded files (the same 30-page manual in three formats)
+
+| | PDF | DOCX | TXT |
+|---|---|---|---|
+| Sections / subsections | 19 / 65 | 19 / 65 | 19 / 65 |
+| Tables found | 30 | 30 | 30 |
+| Chunks (paragraph / table / rule / figure) | 54 / 61 / 17 / 2 | 52 / 61 / 17 / 2 | 50 / 61 / 17 / 0 |
+
+- Tables match **cell for cell** between PDF and DOCX (30 of 30) and between TXT and DOCX; paragraph text differs by
+  about 0.01% of words.
+- Chunk text is identical between formats for 89 to 97% of chunks.
+- The five repeated golden rules are stored as 17 rule chunks: R-01 x4, R-02 x4, R-03 x3, R-04 x3, R-05 x3, matching the source.
+- SQLite integrity check passes; every chunk has an embedding and a keyword-index row.
+
+### Known limits of this step
+
+- **Charts are not searchable.** The PDF and DOCX contain 2 chart images whose numbers (SLA hours, control counts,
+  retention years) appear nowhere else in their text. They are stored as flagged `figure` chunks with their captions
+  (`needs_vision = 1`) and need OCR or a vision model to read. The TXT version includes written chart summaries.
+- **Legacy `.doc` is not read.** Convert to `.docx` first (`soffice --headless --convert-to docx file.doc`). The uploaded
+  "doc" was already a `.docx`.
+- **Scanned PDFs are not supported** (no OCR). The PDF reader is built for PDFs with real text; it rebuilds tables from the
+  thin rule lines this PDF draws, so a PDF with differently drawn tables may need extractor work.
+- **Paragraph boundaries differ slightly in the PDF** (about 25 to 30 of ~155 paragraphs): bullet glyphs are not extractable,
+  so a bullet list can merge into the heading above it, and the title banner is split differently.
+- **The three files are one document.** Searching all three together returns each answer up to three times. Every chunk has a
+  `content_hash` so duplicates can be collapsed in the next step.
 
 ## Knowledge-base format
 

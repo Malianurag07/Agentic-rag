@@ -30,6 +30,16 @@ def main(argv=None) -> None:
     p.add_argument("--groups", default="public", help="comma separated access groups")
     p.add_argument("--trace", action="store_true")
 
+    p = sub.add_parser("ingest-docs", help="chunk PDF / DOCX / TXT files and store them in SQLite")
+    p.add_argument("files", nargs="+")
+    p.add_argument("--db", default="data/documents.db")
+    p.add_argument("--reset", action="store_true", help="empty the database first")
+
+    p = sub.add_parser("db-info", help="show what is stored in the SQLite database")
+    p.add_argument("--db", default="data/documents.db")
+    p.add_argument("--section", help="print the chunks of one subsection, e.g. 3.2")
+    p.add_argument("--search", help="keyword search (FTS5) over all chunks")
+
     sub.add_parser("chat", help="interactive session with follow-up memory")
 
     p = sub.add_parser("eval", help="run the test set")
@@ -37,6 +47,25 @@ def main(argv=None) -> None:
     p.add_argument("--out", default="reports/latest.json")
 
     args = ap.parse_args(argv)
+    if args.cmd == "ingest-docs":
+        from .ingest_docs import format_stats, ingest_files
+        store = ingest_files(args.files, args.db, reset=args.reset)
+        print(format_stats(store.stats()))
+        return
+    if args.cmd == "db-info":
+        from .ingest_docs import format_stats
+        from .sqlite_store import SqliteStore
+        store = SqliteStore(args.db)
+        if args.section:
+            for r in store.db.execute("SELECT c.id, c.kind, c.page_start, c.text FROM chunks c JOIN sections s ON s.id = c.section_id "
+                                      "WHERE s.number = ? ORDER BY c.document_id, c.ordinal", (args.section,)):
+                print(f"[{r['id']}] ({r['kind']}, p{r['page_start']})\n  {r['text'][:600]}\n")
+        elif args.search:
+            for r in store.keyword_search(args.search):
+                print(f"{r['score']:7.2f}  {r['id']}  {r['preview']}")
+        else:
+            print(format_stats(store.stats()))
+        return
     if args.cmd == "ingest":
         store = build_store(args.kb)
         store.save(args.index)
