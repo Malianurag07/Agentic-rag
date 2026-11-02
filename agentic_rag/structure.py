@@ -36,7 +36,11 @@ class Section:
 
 
 def _split_title(text: str) -> tuple[str, str]:
-    """A numbered paragraph is either a bare heading or "Heading: body". Return (title, body)."""
+    """A numbered paragraph is either a bare heading or "Heading: body". Return (title, body).
+    A short paragraph with no sentence break is a heading in its own right, colon or not, so a title such as
+    "UNSTRUCTURED POLICY PROSE: PERFORMANCE CALIBRATION, PIPS, AND MOONLIGHTING" is kept whole."""
+    if len(text) <= MAX_TITLE + 40 and not re.search(r"[.!?]\s", text) and not text.rstrip().endswith("."):
+        return text.rstrip(": ").strip(), ""
     cut = text.find(": ")
     if 0 < cut <= MAX_TITLE:
         return text[:cut].strip(), text[cut + 2:].strip()

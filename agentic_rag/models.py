@@ -60,3 +60,4 @@ class Check:
     supports: list = field(default_factory=list)   # (must-have fact, quote) pairs
     missing: list = field(default_factory=list)
     ratio: float = 0.0
+    unknown: list = field(default_factory=list)   # question words that appear nowhere in the knowledge base

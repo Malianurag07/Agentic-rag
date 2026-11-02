@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS documents (
     ingested_at TEXT, n_blocks INTEGER, n_sections INTEGER, n_chunks INTEGER);
 CREATE TABLE IF NOT EXISTS sections (
     id TEXT PRIMARY KEY, document_id TEXT REFERENCES documents(id), number TEXT, title TEXT, level INTEGER,
-    parent_id TEXT, path TEXT, ordinal INTEGER, page_start INTEGER, page_end INTEGER, embedding TEXT);
+    parent_id TEXT, path TEXT, ordinal INTEGER, page_start INTEGER, page_end INTEGER, embedding TEXT, summary TEXT);
 CREATE TABLE IF NOT EXISTS chunks (
     id TEXT PRIMARY KEY, document_id TEXT REFERENCES documents(id), section_id TEXT REFERENCES sections(id),
     ordinal INTEGER, kind TEXT, text TEXT, context_prefix TEXT, page_start INTEGER, page_end INTEGER, words INTEGER,
@@ -39,6 +39,16 @@ CREATE INDEX IF NOT EXISTS idx_chunks_hash ON chunks(content_hash);
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(chunk_id UNINDEXED, text, context_prefix, tokenize='porter unicode61');
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 """
+
+
+def summarize_subsection(sub: Subsection, words: int = 45) -> str:
+    """The first words of what a subsection says: its opening paragraph, or the column names of its first table."""
+    for block in sub.blocks:
+        if block.kind == "para":
+            return " ".join(block.text.split()[:words])
+        if block.kind == "table":
+            return "Table of " + ", ".join(h for h in block.header if h)
+    return ""
 
 
 def sha256_of(path: Path) -> str:
@@ -53,6 +63,8 @@ class SqliteStore:
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA foreign_keys = ON")
         self.db.executescript(SCHEMA)
+        if "summary" not in {r["name"] for r in self.db.execute("PRAGMA table_info(sections)")}:
+            self.db.execute("ALTER TABLE sections ADD COLUMN summary TEXT")      # databases created before summaries existed
 
     def close(self) -> None:
         self.db.close()
@@ -87,15 +99,16 @@ class SqliteStore:
             for section in tree:
                 sid = f"{doc_id}:{section.number}"
                 s_path = f"Section {section.number}: {section.title}" if section.number != "0" else section.title
-                self.db.execute("INSERT INTO sections VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                                (sid, doc_id, section.number, section.title, 1, None, s_path, order, None, None, None))
+                self.db.execute("INSERT INTO sections (id, document_id, number, title, level, parent_id, path, ordinal) VALUES (?,?,?,?,?,?,?,?)",
+                                (sid, doc_id, section.number, section.title, 1, None, s_path, order))
                 order += 1
                 for sub in section.subsections:
                     subid = f"{doc_id}:{sub.number}"
                     p0, p1 = sub.page_range()
-                    self.db.execute("INSERT INTO sections VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    self.db.execute("INSERT INTO sections (id, document_id, number, title, level, parent_id, path, ordinal, page_start, page_end, summary) "
+                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                                     (subid, doc_id, sub.number, sub.title, 2, sid, f"{s_path} > {sub.number} {sub.title}",
-                                     order, p0, p1, None))
+                                     order, p0, p1, summarize_subsection(sub)))
                     order += 1
                     for i, ch in enumerate(chunked.get(sub.number, []), start=1):
                         cid = f"{subid}:{i:03d}"
@@ -111,15 +124,15 @@ class SqliteStore:
         """(Re)compute every embedding. IDF weights depend on the whole corpus, so this runs after any ingestion."""
         config = config or Config()
         chunks = self.db.execute("SELECT id, text, context_prefix FROM chunks").fetchall()
-        sections = self.db.execute("SELECT id, path FROM sections").fetchall()
+        sections = self.db.execute("SELECT id, path, summary FROM sections").fetchall()
         embedder = HashEmbedder(dim=config.embedding_dim)
-        embedder.fit([f"{c['context_prefix']} {c['text']}" for c in chunks] + [s["path"] for s in sections])
+        embedder.fit([f"{c['context_prefix']} {c['text']}" for c in chunks] + [f"{s['path']} {s['summary'] or ''}" for s in sections])
         with self.db:
             for c in chunks:
                 vec = embedder.embed(f"{c['context_prefix']} {c['text']}")
                 self.db.execute("UPDATE chunks SET embedding = ? WHERE id = ?", (json.dumps({str(k): round(v, 5) for k, v in vec.items()}), c["id"]))
             for s in sections:
-                vec = embedder.embed(s["path"])
+                vec = embedder.embed(f"{s['path']} {s['summary'] or ''}")
                 self.db.execute("UPDATE sections SET embedding = ? WHERE id = ?", (json.dumps({str(k): round(v, 5) for k, v in vec.items()}), s["id"]))
             self.db.execute("INSERT OR REPLACE INTO meta VALUES ('embedder', ?)", (json.dumps(embedder.to_json()),))
         return len(chunks)
@@ -146,7 +159,7 @@ class SqliteStore:
         branches, chunks = [], []
         for r in self.db.execute("SELECT * FROM sections ORDER BY document_id, ordinal"):
             branches.append(Branch(id=r["id"], name=r["title"], level=r["level"], parent_id=r["parent_id"], path=r["path"],
-                                   description="", aliases=[], embedding=dec(r["embedding"]), access=["public"]))
+                                   description=r["summary"] or "", aliases=[], embedding=dec(r["embedding"]), access=["public"]))
         for r in self.db.execute("SELECT * FROM chunks ORDER BY document_id, section_id, ordinal"):
             chunks.append(Chunk(id=r["id"], branch_id=r["section_id"], text=r["text"], context_prefix=r["context_prefix"],
                                 source=docs[r["document_id"]], embedding=dec(r["embedding"])))

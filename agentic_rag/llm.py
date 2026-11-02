@@ -80,7 +80,7 @@ class HeuristicLLM:
         text_stems = set(content_stems(text))
         # the parent topic's words are context for its branches (e.g. 'reimbursement' lives on the Refund topic)
         branch_stems = set(content_stems(branch.search_text() + " " + (topic.search_text() if topic else "")))
-        supports, missing = [], []
+        supports, missing, unknown = [], [], []
         got = total = 0.0
         max_w = math.log(n_docs + 1) + 0.5
         for f in facts:
@@ -97,36 +97,55 @@ class HeuristicLLM:
                 supports.append((f, quote))
             else:
                 missing.append(f)
+                if not known:
+                    unknown.append(f)
         ratio = got / total if total else 1.0
-        return ratio, supports, missing
+        return ratio, supports, missing, unknown
 
     def check(self, question: str, branch: Branch, chunks: list[Chunk], siblings: list, df, n_docs: int,
               topic: Branch | None = None) -> Check:
         self.calls += 1
-        ratio, supports, missing = self._support(question, branch, chunks, df, n_docs, topic)
+        ratio, supports, missing, unknown = self._support(question, branch, chunks, df, n_docs, topic)
         for sib_branch, sib_chunks in siblings:
-            sib_ratio, _, _ = self._support(question, sib_branch, sib_chunks, df, n_docs, topic)
+            sib_ratio = self._support(question, sib_branch, sib_chunks, df, n_docs, topic)[0]
             if sib_ratio >= ratio + self.config.sibling_margin:
                 return Check(False, f"sibling branch '{sib_branch.name}' fits better ({sib_ratio:.2f} vs {ratio:.2f})",
-                             supports, missing, ratio)
+                             supports, missing, ratio, unknown)
         if ratio >= self.config.evidence_ratio:
             return Check(True, "all key facts supported" if not missing else f"mostly supported; missing {missing}",
-                         supports, missing, ratio)
-        return Check(False, f"no support in '{branch.name}' for: {missing}", supports, missing, ratio)
+                         supports, missing, ratio, unknown)
+        return Check(False, f"no support in '{branch.name}' for: {missing}", supports, missing, ratio, unknown)
 
     # ---- 6.8 answer + faithfulness ------------------------------------------------------------------------------------
     def answer(self, question: str, branch: Branch, chunks: list[Chunk]) -> str:
+        """Extractive answer. Prose: the best-matching sentence and the two after it. Tables: the rows that match the question
+        best (a question often needs two rows of the same table), with the table's title."""
         self.calls += 1
         q = set(content_stems(question))
-        best_text = ""
-        best = (-1, 0)
+        parts: list[str] = []
+        prose_best, prose_text = (-1, 0), ""
         for chunk in chunks:
-            sents = sentences(chunk.text)
-            for i, sent in enumerate(sents):
-                score = len(q & set(content_stems(sent)))
-                if score > best[0]:
-                    best, best_text = (score, i), " ".join(sents[i:i + 3])
-        return best_text
+            if "\nRows:" in chunk.text or "Rows:\n" in chunk.text:
+                head, _, body = chunk.text.partition("Rows:\n")
+                rows = [r[2:] if r.startswith("- ") else r for r in body.split("\n") if r.strip()]
+                scored = sorted(((len(q & set(content_stems(r))), i, r) for i, r in enumerate(rows)), key=lambda x: (-x[0], x[1]))
+                keep = [x for x in scored if x[0] > 0][:3] or scored[:1]
+                if keep and keep[0][0] >= 1:
+                    title = head.split(". Columns:")[0].replace("Table in ", "").strip()
+                    parts.append((keep[0][0], f"{title}: " + " ; ".join(r for _, _, r in sorted(keep, key=lambda x: x[1]))))
+            else:
+                sents = sentences(chunk.text)
+                for i, sent in enumerate(sents):
+                    score = len(q & set(content_stems(sent)))
+                    if score > prose_best[0]:
+                        prose_best, prose_text = (score, i), " ".join(sents[i:i + 3])
+        scored_parts = [(score, text) for score, text in parts if isinstance(score, int)]
+        if prose_best[0] > 0:
+            scored_parts.append((prose_best[0], prose_text))
+        if not scored_parts:
+            return prose_text or (parts[0][1] if parts else "")
+        top = max(score for score, _ in scored_parts)
+        return "\n".join(text for score, text in scored_parts if score >= max(1, top - 1))
 
     def unsupported(self, answer_text: str, chunks: list[Chunk]) -> list[str]:
         self.calls += 1

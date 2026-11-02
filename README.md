@@ -17,7 +17,7 @@ python3 -m agentic_rag ask "What are the refund fraud checks?" --groups staff,pu
 python3 -m agentic_rag chat                         # follow-up questions work in a session
 python3 -m agentic_rag eval                         # run data/testset.jsonl
 python3 -m agentic_rag eval --testset data/holdout.jsonl --out reports/holdout.json
-python3 -m unittest discover -s tests               # 46 unit tests
+python3 -m unittest discover -s tests               # 47 unit tests
 ```
 
 ## How it maps to the plan
@@ -81,25 +81,35 @@ question, follow-ups, and six that the documents cannot answer (including a dres
 `tests/test_doc_questions.py` checks the **answer key**: each expected fact must exist in the stored text of the PDF, the DOCX and
 the TXT. These questions have not been run through the retrieval pipeline yet.
 
-### Baseline on the 50 document questions (offline mode, untuned)
+### Results on the document questions (offline mode)
 
 ```bash
-python3 -m agentic_rag eval-docs      # 50 questions x PDF, DOCX, TXT = 150 runs; writes reports/docs_latest.json
+python3 -m agentic_rag eval-docs                                              # 50 questions x PDF, DOCX, TXT = 150 runs
+python3 -m agentic_rag eval-docs --questions data/doc_questions_holdout.jsonl  # 25 fresh questions x 3 formats = 75 runs
 ```
 
-| | Result |
-|---|---|
-| Pass rate | **36%** (54 of 150 runs); identical for PDF, DOCX and TXT, and the same questions pass in all three |
-| Right section chosen (top-1 / top-3) | 39% / 64% (a chunk-level search over the same data reaches 65% / 79%) |
-| When it answers an answerable question, it is right | 70% (42 of 60) |
-| Refused or asked instead of answering an answerable question | 69 of 129 runs |
-| Multi-part questions | 0 of 36 pass; 3 of 75 expected facts found |
-| Unanswerable questions correctly refused | 50% (the dress-code trap 3 of 3; chart-only 0 of 6) |
+Two question sets, because the first was used to find and fix problems (so its score is optimistic), while the second (written
+before the changes below and never tuned on) shows how the pipeline does on questions it has not seen.
 
-Where the 43 answerable TXT questions break: 16 never reach the right section as a candidate (branch scoring uses only subsection
-titles, and some titles are cut at the first colon, e.g. `5.4 UNSTRUCTURED POLICY PROSE`); 9 reach it but are refused or answered
-with a clarifying question; 3 pick the right section but return the wrong part of it; 1 answers from the wrong section; 14 pass.
-The raw report is `reports/docs_baseline.json`.
+| | Before the changes | After the changes |
+|---|---|---|
+| 50 questions (used while tuning) | 36.0% | 56.7% |
+| **25 fresh questions (not tuned on)** | **26.7%** | **34.7%** |
+| Right section among the top 3 candidates (fresh) | 32% | 77% |
+| Right section chosen first (fresh) | 23% | 35% |
+| Precision when it answers (fresh) | n/a | 79% |
+| Multi-part questions (fresh) | 0 of 18 | 6 of 18 |
+
+The changes: sections are scored on their body as well as their title (best matching chunk, plus a short summary of each section);
+subsection titles are no longer cut at the first colon; multi-part questions are split into sub-questions; the evidence check
+accepts a lower bar when retrieval has a clear lead; table answers pick the matching rows; and a question that uses words the
+knowledge base has never seen is refused instead of answered with a clarifying question.
+
+Where the 22 answerable fresh questions end up (TXT): 7 correct; 10 had the right section as a candidate but were refused or
+answered with a clarifying question (the keyword evidence check); 5 never reached the right section. Of the 6 fresh unanswerable
+questions the pipeline invented an answer for 2 (a "salary" question answered with the grade table, and a "cloud provider"
+question matched on the word "cloud"). 25 fresh questions is a small sample: treat the percentages as +/- 10 points.
+Reports: `reports/docs_baseline.json`, `reports/docs_after.json`, `reports/docs_holdout_before.json`, `reports/docs_holdout_after.json`.
 
 ### Known limits of this step
 

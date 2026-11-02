@@ -111,12 +111,24 @@ class Pipeline:
         toks = tokenize(q)
         return bool(toks) and all(t in GREETINGS for t in toks)
 
-    @staticmethod
-    def _plan(question: str) -> list[str]:
+    SPLIT = re.compile(r",?\s+and\s+(?=(?:what|how|who|which|when|where|why|can|could|is|are|do|does|must|should)\b)|;\s+|\?\s+(?=(?:what|how|who|which|when|where|why|can|could|is|are|do|does|must|should)\b)", re.I)
+
+    @classmethod
+    def _plan(cls, question: str) -> list[str]:
+        """Split a multi-part question into sub-questions, each answered on its own (plan 7.4).
+        "Compare X and Y" becomes two questions; so does "A?, and what B?". A short fragment that points back with
+        "it", "that" or "this" keeps the first part as context."""
         m = re.match(r"\s*compare\s+(.+?)\s+(?:and|with|to|vs\.?|versus)\s+(.+?)\s*[?.!]*\s*$", question, re.I)
         if m:
             return [m.group(1).strip(), m.group(2).strip()]
-        return [question]
+        parts = [p.strip(" ?.,;") for p in cls.SPLIT.split(question) if p and p.strip(" ?.,;")]
+        if len(parts) < 2:
+            return [question]
+        subs = [parts[0]]
+        for part in parts[1:]:
+            pointer = re.search(r"\b(it|that|this|they|them|those)\b", part, re.I)
+            subs.append(f"{part} ({parts[0]})" if pointer or len(content_stems(part)) < 3 else part)
+        return subs
 
     # ---- one question through the stages -----------------------------------------------------------------------------------
     def _run_single(self, question: str, groups, session: dict, trace: list, budget: Budget) -> Result:
@@ -143,6 +155,7 @@ class Pipeline:
                               candidate_ids=ids)
 
             gap = cands[0].score - (cands[1].score if len(cands) > 1 else 0.0)
+            confident = gap >= cfg.score_gap_clear
             if gap >= cfg.score_gap_clear:
                 pick = cands[0]
                 log(event="clear gap, LLM choice skipped", gap=round(gap, 3), branch=pick.branch.id)
@@ -151,6 +164,11 @@ class Pipeline:
                 choice = self.llm.choose(q, cands[:cfg.llm_candidates_shown])
                 log(event="LLM choice", gap=round(gap, 3), branch=choice.branch_id, reason=choice.reason)
                 if choice.branch_id is None:
+                    unknown = self._unknown_terms(q, df)
+                    if unknown:
+                        log(event="no clear branch and the question uses words the knowledge base has never seen: refusing, not asking",
+                            unknown=unknown)
+                        return self._fallback(q, question, groups, session, trace, budget, ids, tries=0)
                     return Result(question, "clarify", choice.ask or "Could you tell me a bit more?",
                                   candidate_ids=ids, llm_calls=0)
                 pick = next((c for c in cands if c.branch.id == choice.branch_id), cands[0])
@@ -167,7 +185,10 @@ class Pipeline:
                 check = self.llm.check(q, pick.branch, chunks, siblings, df, n_docs, store.branches.get(pick.branch.parent_id))
                 log(event="evidence check", branch=pick.branch.id, ok=check.ok, reason=check.reason,
                     ratio=round(check.ratio, 2), quotes=check.supports[:3])
-                if check.ok:
+                relaxed = (not check.ok and confident and not check.unknown and check.ratio >= cfg.evidence_ratio_confident)
+                if relaxed:
+                    log(event="evidence check relaxed: retrieval had a clear lead", branch=pick.branch.id, ratio=round(check.ratio, 2))
+                if check.ok or relaxed:
                     return self._respond(question, q, pick.branch, chunks, session, trace, budget, ids, tries, False)
                 blocked[pick.branch.id] = check.reason          # soft block: this question only, kept in the list
                 log(event="soft-block", branch=pick.branch.id, reason=check.reason)
@@ -180,13 +201,36 @@ class Pipeline:
             return Result(question, "refused", f"I couldn't finish within my limits ({exc}). Please rephrase or narrow the question.")
 
     # ---- ranking (plan 6.3): path-aware leaf scoring --------------------------------------------------------------------------
+    @staticmethod
+    def _unknown_terms(q: str, df) -> list[str]:
+        from .text import GENERIC_STEMS, is_wordlike, stem
+        return [stem(t) for t in content_tokens(q)
+                if is_wordlike(t) and stem(t) not in GENERIC_STEMS and df.get(stem(t), 0) == 0]
+
+    def _stems_of(self, chunk: Chunk) -> set:
+        cache = self.__dict__.setdefault("_stem_cache", {})
+        if chunk.id not in cache:
+            cache[chunk.id] = set(content_stems(chunk.embed_text()))
+        return cache[chunk.id]
+
     def _rank(self, q: str, groups) -> list[Candidate]:
+        """Score each subsection leaf from two angles and keep the better one: how well its title and opening words match,
+        and how well its single best chunk matches (embedding plus shared words). Facts that live deep in a section's body
+        are therefore found even when its title says nothing about them. A small weight from the parent topic is added."""
         qvec = self.store.embedder.embed(q)
+        qs = set(content_stems(q))
         topic_scores = {t.id: cosine(qvec, t.embedding) for t in self.store.topics(groups)}
+        best_chunk: dict[str, float] = {}
+        for c in self.store.visible_chunks(groups):
+            overlap = len(qs & self._stems_of(c)) / (len(qs) or 1)
+            h = cosine(qvec, c.embedding) + self.config.keyword_weight * overlap
+            if h > best_chunk.get(c.branch_id, 0.0):
+                best_chunk[c.branch_id] = h
         w = self.config.topic_weight
         out = []
         for leaf in self.store.leaves(groups):
-            ts, cs = topic_scores.get(leaf.parent_id, 0.0), cosine(qvec, leaf.embedding)
+            ts = topic_scores.get(leaf.parent_id, 0.0)
+            cs = max(cosine(qvec, leaf.embedding), best_chunk.get(leaf.id, 0.0))
             out.append(Candidate(leaf, w * ts + (1 - w) * cs, ts, cs))
         out.sort(key=lambda c: c.score, reverse=True)
         return out[:self.config.top_k_branches]

@@ -16,6 +16,7 @@ class Config:
     # evidence check
     evidence_ratio: float = 0.60        # share of (weighted) question facts that must be supported
     unknown_term_weight: float = 1.00   # an unknown word counts this share of the heaviest known word
+    evidence_ratio_confident: float = 0.40   # lower bar when retrieval picked the branch with a clear lead
     sibling_margin: float = 0.15        # reject a branch if a sibling supports the question this much better
     # agent loop and guardrails
     max_branch_tries: int = 3
@@ -23,7 +24,7 @@ class Config:
     time_budget_seconds: float = 10.0
     # chunking
     chunk_size_words: int = 120
-    chunks_to_llm: int = 4
+    chunks_to_llm: int = 6
     # fallback search
     fallback_top_k: int = 5
     fallback_floor: float = 0.08

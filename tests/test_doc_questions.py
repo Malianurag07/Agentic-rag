@@ -12,24 +12,27 @@ from agentic_rag.ingest_docs import ingest_files
 ROOT = Path(__file__).resolve().parent.parent
 FILES = [ROOT / "Rag testing doc.pdf", ROOT / "enterprise_company_policy_manual.docx", ROOT / "enterprise_company_policy_manual.txt"]
 QUESTIONS = ROOT / "data" / "doc_questions.jsonl"
+HOLDOUT = ROOT / "data" / "doc_questions_holdout.jsonl"
 
 
 def norm(s: str) -> str:
     return re.sub(r"\s+", " ", s.lower().replace("‑", "-")).strip()
 
 
-def load_questions() -> list[dict]:
-    return [json.loads(l) for l in QUESTIONS.read_text().splitlines() if l.strip()]
+def load_questions(path: Path = QUESTIONS) -> list[dict]:
+    return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
 
 
-@unittest.skipUnless(all(f.exists() for f in FILES) and QUESTIONS.exists(), "documents or question file missing")
+@unittest.skipUnless(all(f.exists() for f in FILES) and QUESTIONS.exists() and HOLDOUT.exists(), "documents or question files missing")
 class AnswerKey(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.store = ingest_files(FILES, Path(cls.tmp.name) / "q.db", log=lambda *_: None)
         cls.docs = [r["id"] for r in cls.store.db.execute("SELECT id FROM documents")]
-        cls.questions = load_questions()
+        cls.main = load_questions()
+        cls.holdout = load_questions(HOLDOUT)
+        cls.questions = cls.main + cls.holdout       # the answer key of both sets is validated
 
     @classmethod
     def tearDownClass(cls):
@@ -44,10 +47,10 @@ class AnswerKey(unittest.TestCase):
         return norm(" ".join(r["text"] for r in self.store.db.execute("SELECT text FROM chunks WHERE document_id = ?", (doc,))))
 
     def test_there_are_fifty_unique_questions_of_every_kind(self):
-        ids = [q["id"] for q in self.questions]
+        ids = [q["id"] for q in self.main]
         self.assertEqual(len(ids), 50)
         self.assertEqual(len(set(ids)), 50)
-        kinds = {q["kind"] for q in self.questions}
+        kinds = {q["kind"] for q in self.main}
         self.assertTrue({"prose lookup", "table lookup", "multi-part", "golden rule", "paraphrase", "typo", "vague",
                          "follow-up", "unanswerable", "trap", "chart-only"} <= kinds)
 
@@ -90,6 +93,10 @@ class AnswerKey(unittest.TestCase):
             self.assertNotIn("dress code standards", self.section_text(doc, "2.4").replace("workplace violence prevention, consensual relationships & ", "x"))
             self.assertNotRegex(text, r"\b48\b.{0,40}checkpoint|cyber & data.{0,30}\b48\b")      # the chart value is image-only
             self.assertNotRegex(text, r"tier 5.{0,60}\b30[- ]day")
+
+    def test_holdout_has_25_questions_that_do_not_overlap_the_main_set(self):
+        self.assertEqual(len(self.holdout), 25)
+        self.assertFalse({q["question"].lower() for q in self.main} & {q["question"].lower() for q in self.holdout})
 
     def test_chart_totals_in_the_text_are_consistent_with_the_chart_questions(self):
         for doc in self.docs:                                                     # the caption states the total, not the split

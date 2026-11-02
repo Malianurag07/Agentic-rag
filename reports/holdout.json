@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-02 05:36:03",
+  "timestamp": "2026-11-02 06:15:59",
   "llm": "heuristic",
   "embedder": "local-hash-tfidf",
   "summary": {
@@ -8,14 +8,14 @@
     "pass_rate": 0.5357142857142857,
     "branch_top1": 0.45454545454545453,
     "branch_top1_n": 22,
-    "branch_top3": 0.9090909090909091,
+    "branch_top3": 0.9545454545454546,
     "branch_top3_n": 22,
     "contains": 0.4782608695652174,
     "contains_n": 23,
     "not_contains": 1.0,
     "not_contains_n": 1,
-    "avg_steps": 4.785714285714286,
-    "avg_llm_calls": 3.6785714285714284,
+    "avg_steps": 5.678571428571429,
+    "avg_llm_calls": 4.178571428571429,
     "fallback_rate": 0.5357142857142857,
     "by_kind": {
       "different wording": [
@@ -71,12 +71,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "refund.damage-refund",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Shipping costs, Late delivery refund, Tracking and delays. Could you rephrase or add more detail?",
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Shipping costs, Late delivery refund, Invoices. Could you rephrase or add more detail?",
       "steps": 6,
       "llm_calls": 4,
       "tries": 1,
       "fallback": true,
-      "seconds": 0.0029
+      "seconds": 0.003
     },
     {
       "id": "h-02",
@@ -97,7 +97,7 @@
       "llm_calls": 6,
       "tries": 3,
       "fallback": true,
-      "seconds": 0.0015
+      "seconds": 0.0016
     },
     {
       "id": "h-03",
@@ -113,7 +113,7 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "refund.late-delivery-refund",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Lost package, Late delivery refund, Change delivery address. Could you rephrase or add more detail?",
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Lost package, Late delivery refund, Tracking and delays. Could you rephrase or add more detail?",
       "steps": 3,
       "llm_calls": 2,
       "tries": 0,
@@ -134,12 +134,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "refund.late-delivery-refund",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Late delivery refund, Tracking and delays, Invoices. Could you rephrase or add more detail?",
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Late delivery refund, Invoices, Failed payment. Could you rephrase or add more detail?",
       "steps": 5,
       "llm_calls": 3,
       "tries": 1,
       "fallback": true,
-      "seconds": 0.0009
+      "seconds": 0.001
     },
     {
       "id": "h-05",
@@ -155,12 +155,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "refund.change-of-mind-refund",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Change of mind refund, Damage refund, Late delivery refund. Could you rephrase or add more detail?",
-      "steps": 5,
-      "llm_calls": 3,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Change of mind refund, Change delivery address, Damage refund. Could you rephrase or add more detail?",
+      "steps": 6,
+      "llm_calls": 4,
       "tries": 1,
       "fallback": true,
-      "seconds": 0.0016
+      "seconds": 0.0014
     },
     {
       "id": "h-06",
@@ -218,12 +218,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "shipping.shipping-costs",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Shipping costs, Late delivery refund, Tracking and delays. Could you rephrase or add more detail?",
-      "steps": 8,
-      "llm_calls": 5,
-      "tries": 2,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Shipping costs, Late delivery refund, Change delivery address. Could you rephrase or add more detail?",
+      "steps": 10,
+      "llm_calls": 6,
+      "tries": 3,
       "fallback": true,
-      "seconds": 0.0009
+      "seconds": 0.001
     },
     {
       "id": "h-09",
@@ -240,11 +240,11 @@
       "branch": null,
       "expected_branch": "shipping.lost-package",
       "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Lost package, Shipping costs, Change delivery address. Could you rephrase or add more detail?",
-      "steps": 6,
-      "llm_calls": 4,
+      "steps": 5,
+      "llm_calls": 3,
       "tries": 1,
       "fallback": true,
-      "seconds": 0.0013
+      "seconds": 0.0012
     },
     {
       "id": "h-10",
@@ -265,7 +265,7 @@
       "llm_calls": 3,
       "tries": 1,
       "fallback": true,
-      "seconds": 0.0014
+      "seconds": 0.0011
     },
     {
       "id": "h-11",
@@ -275,18 +275,18 @@
       "checks": {
         "status": false,
         "branch_top1": false,
-        "branch_top3": false,
+        "branch_top3": true,
         "contains": false
       },
-      "status": "clarify",
+      "status": "refused",
       "branch": null,
       "expected_branch": "shipping.change-delivery-address",
-      "answer": "Which one do you mean: Lost package, Tracking and delays, Change delivery address, Shipping costs?",
-      "steps": 2,
-      "llm_calls": 2,
-      "tries": 0,
-      "fallback": false,
-      "seconds": 0.0005
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Change delivery address, Tracking and delays, Shipping costs. Could you rephrase or add more detail?",
+      "steps": 9,
+      "llm_calls": 5,
+      "tries": 3,
+      "fallback": true,
+      "seconds": 0.0011
     },
     {
       "id": "h-12",
@@ -323,12 +323,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "billing.invoices",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Invoices, Damage refund, Lost package. Could you rephrase or add more detail?",
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Invoices, Damage refund, Failed payment. Could you rephrase or add more detail?",
       "steps": 5,
       "llm_calls": 3,
       "tries": 1,
       "fallback": true,
-      "seconds": 0.0011
+      "seconds": 0.0009
     },
     {
       "id": "h-14",
@@ -365,12 +365,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "billing.billing-dispute",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Billing dispute, Failed payment, Invoices. Could you rephrase or add more detail?",
-      "steps": 5,
-      "llm_calls": 3,
-      "tries": 1,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Billing dispute, Subscription refund, Invoices. Could you rephrase or add more detail?",
+      "steps": 7,
+      "llm_calls": 4,
+      "tries": 2,
       "fallback": true,
-      "seconds": 0.0008
+      "seconds": 0.001
     },
     {
       "id": "h-16",
@@ -391,7 +391,7 @@
       "llm_calls": 4,
       "tries": 1,
       "fallback": false,
-      "seconds": 0.0003
+      "seconds": 0.0004
     },
     {
       "id": "h-17",
@@ -408,11 +408,11 @@
       "branch": "account.delete-account",
       "expected_branch": "account.delete-account",
       "answer": "Account deletion removes personal data within 30 days. Open orders must be completed first.\n\nSource: Account > Delete account (Account_Help)",
-      "steps": 4,
-      "llm_calls": 4,
+      "steps": 5,
+      "llm_calls": 5,
       "tries": 1,
       "fallback": false,
-      "seconds": 0.0004
+      "seconds": 0.0006
     },
     {
       "id": "h-18",
@@ -428,12 +428,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": "refund.change-of-mind-refund",
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Tracking and delays, Change of mind refund, Late delivery refund. Could you rephrase or add more detail?",
-      "steps": 8,
-      "llm_calls": 5,
-      "tries": 2,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Tracking and delays, Change of mind refund, Change delivery address. Could you rephrase or add more detail?",
+      "steps": 10,
+      "llm_calls": 6,
+      "tries": 3,
       "fallback": true,
-      "seconds": 0.0015
+      "seconds": 0.0016
     },
     {
       "id": "h-19",
@@ -454,7 +454,7 @@
       "llm_calls": 4,
       "tries": 1,
       "fallback": false,
-      "seconds": 0.0003
+      "seconds": 0.0004
     },
     {
       "id": "h-20",
@@ -475,7 +475,7 @@
       "llm_calls": 8,
       "tries": 2,
       "fallback": false,
-      "seconds": 0.0007
+      "seconds": 0.0008
     },
     {
       "id": "h-21",
@@ -492,8 +492,8 @@
       "branch": "refund.change-of-mind-refund",
       "expected_branch": "refund.change-of-mind-refund",
       "answer": "A 15% restocking fee is deducted from the refund. Items must be unused and in the original packaging.\n\nCalculation: 80*(1-15/100) = 68.00\n\nSource: Refund > Change of mind refund (Returns_Policy)",
-      "steps": 6,
-      "llm_calls": 5,
+      "steps": 5,
+      "llm_calls": 4,
       "tries": 1,
       "fallback": false,
       "seconds": 0.0008
@@ -509,12 +509,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": null,
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Payment methods, Failed payment, Reset password. Could you rephrase or add more detail?",
-      "steps": 3,
-      "llm_calls": 2,
-      "tries": 0,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Payment methods, Failed payment, Subscription refund. Could you rephrase or add more detail?",
+      "steps": 8,
+      "llm_calls": 5,
+      "tries": 2,
       "fallback": true,
-      "seconds": 0.0007
+      "seconds": 0.0012
     },
     {
       "id": "h-23",
@@ -527,12 +527,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": null,
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Late delivery refund, Failed payment, Shipping costs. Could you rephrase or add more detail?",
-      "steps": 3,
-      "llm_calls": 2,
-      "tries": 0,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Failed payment, Late delivery refund, Shipping costs. Could you rephrase or add more detail?",
+      "steps": 6,
+      "llm_calls": 4,
+      "tries": 1,
       "fallback": true,
-      "seconds": 0.0008
+      "seconds": 0.0011
     },
     {
       "id": "h-24",
@@ -546,8 +546,8 @@
       "branch": "refund.change-of-mind-refund",
       "expected_branch": null,
       "answer": "Change of mind returns are accepted within 30 days of delivery. A 15% restocking fee is deducted from the refund. Items must be unused and in the original packaging.\n\nSource: Refund > Change of mind refund (Returns_Policy)",
-      "steps": 4,
-      "llm_calls": 4,
+      "steps": 5,
+      "llm_calls": 5,
       "tries": 1,
       "fallback": false,
       "seconds": 0.0006
@@ -581,12 +581,12 @@
       "status": "refused",
       "branch": null,
       "expected_branch": null,
-      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Damage refund, Late delivery refund, Subscription refund. Could you rephrase or add more detail?",
-      "steps": 5,
-      "llm_calls": 3,
-      "tries": 1,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Damage refund, Shipping costs, Subscription refund. Could you rephrase or add more detail?",
+      "steps": 8,
+      "llm_calls": 5,
+      "tries": 2,
       "fallback": true,
-      "seconds": 0.0012
+      "seconds": 0.0015
     },
     {
       "id": "h-27",
@@ -605,9 +605,9 @@
       "answer": "Flag customers with more than 3 damage refunds in 90 days.\n\nSource: Fraud review > Refund fraud checks (Internal_Fraud_Playbook)",
       "steps": 7,
       "llm_calls": 6,
-      "tries": 1,
-      "fallback": true,
-      "seconds": 0.0018
+      "tries": 2,
+      "fallback": false,
+      "seconds": 0.0016
     },
     {
       "id": "h-28",

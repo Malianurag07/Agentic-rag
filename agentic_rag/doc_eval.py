@@ -112,7 +112,7 @@ def format_report(report: dict, show_failures: int = 40) -> str:
     s = report["summary"]
     pc = lambda x: f"{x * 100:5.1f}%"
     lines = [f"Document question evaluation ({report['timestamp']}, judgment layer: {report['llm']})", "=" * 78,
-             f"Runs: {s['runs']} (50 questions x 3 formats)   Passed: {s['passed']}   Pass rate: {pc(s['pass_rate'])}", "",
+             f"Runs: {s["runs"]} ({s["runs"] // 3} questions x 3 formats)   Passed: {s['passed']}   Pass rate: {pc(s['pass_rate'])}", "",
              f"Right section chosen (top-1): {pc(s['section_top1'])}    in top 3 candidates: {pc(s['section_top3'])}",
              f"Expected facts present in answers: {pc(s['fact_recall'])}",
              f"Unanswerable questions correctly refused: {pc(s['refusal_rate'])}   invented answers: {s['hallucinations']}",
@@ -124,7 +124,7 @@ def format_report(report: dict, show_failures: int = 40) -> str:
     for k, (a, b) in s["by_kind"].items():
         lines.append(f"  {k:<14}{a:>3}/{b:<3} {pc(a / b)}")
     failed = [r for r in report["rows"] if not r["passed"] and r["format"] == "txt"]
-    lines += ["", f"Failures on the TXT version ({len(failed)} of 50; the other formats are in the JSON report):"]
+    lines += ["", f"Failures on the TXT version ({len(failed)} of {s['runs'] // 3}; the other formats are in the JSON report):"]
     for r in failed[:show_failures]:
         lines.append(f"  [{r['id']}] {r['question'][:84]}")
         lines.append(f"       status={r['status']} section={r['branch']} (want {r['expected_sections']}) facts {r['facts_found']}/{r['facts_total']}")
