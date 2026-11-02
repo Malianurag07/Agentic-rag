@@ -4,7 +4,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from .embeddings import HashEmbedder, cosine
+from .embeddings import HashEmbedder, cosine, embedder_from_json
 from .models import Branch, Chunk
 from .text import content_stems, content_tokens
 
@@ -86,4 +86,4 @@ class Store:
 
         branches = [Branch(**{**b, "embedding": dec(b["embedding"])}) for b in data["branches"]]
         chunks = [Chunk(**{**c, "embedding": dec(c["embedding"])}) for c in data["chunks"]]
-        return cls(HashEmbedder.from_json(data["embedder"]), branches, chunks)
+        return cls(embedder_from_json(data["embedder"]), branches, chunks)

@@ -17,7 +17,7 @@ from pathlib import Path
 
 from .chunker import DocChunk
 from .config import Config
-from .embeddings import HashEmbedder
+from .embeddings import HashEmbedder, embedder_from_json, make_embedder
 from .models import Branch, Chunk
 from .store import Store
 from .structure import Section, Subsection
@@ -120,20 +120,23 @@ class SqliteStore:
                         self.db.execute("INSERT INTO chunks_fts VALUES (?,?,?)", (cid, ch.text, prefix))
         return n_chunks
 
-    def rebuild_embeddings(self, config: Config | None = None) -> int:
-        """(Re)compute every embedding. IDF weights depend on the whole corpus, so this runs after any ingestion."""
+    def rebuild_embeddings(self, config: Config | None = None, kind: str = "hash") -> int:
+        """(Re)compute every embedding with the chosen embedder ("neural" = MiniLM, "hash" = local TF-IDF). Run after any
+        ingestion: the hash embedder's IDF weights depend on the whole corpus, and all vectors must come from one model."""
         config = config or Config()
         chunks = self.db.execute("SELECT id, text, context_prefix FROM chunks").fetchall()
         sections = self.db.execute("SELECT id, path, summary FROM sections").fetchall()
-        embedder = HashEmbedder(dim=config.embedding_dim)
-        embedder.fit([f"{c['context_prefix']} {c['text']}" for c in chunks] + [f"{s['path']} {s['summary'] or ''}" for s in sections])
+        embedder = make_embedder(kind, config.embedding_dim)
+        c_texts = [f"{c['context_prefix']} {c['text']}" for c in chunks]
+        s_texts = [f"{s['path']} {s['summary'] or ''}" for s in sections]
+        embedder.fit(c_texts + s_texts)
+        many = embedder.embed_many if hasattr(embedder, "embed_many") else (lambda ts: [embedder.embed(t) for t in ts])
+        enc = lambda vec: json.dumps({str(k): round(v, 5) for k, v in vec.items()})
         with self.db:
-            for c in chunks:
-                vec = embedder.embed(f"{c['context_prefix']} {c['text']}")
-                self.db.execute("UPDATE chunks SET embedding = ? WHERE id = ?", (json.dumps({str(k): round(v, 5) for k, v in vec.items()}), c["id"]))
-            for s in sections:
-                vec = embedder.embed(f"{s['path']} {s['summary'] or ''}")
-                self.db.execute("UPDATE sections SET embedding = ? WHERE id = ?", (json.dumps({str(k): round(v, 5) for k, v in vec.items()}), s["id"]))
+            for c, vec in zip(chunks, many(c_texts)):
+                self.db.execute("UPDATE chunks SET embedding = ? WHERE id = ?", (enc(vec), c["id"]))
+            for s, vec in zip(sections, many(s_texts)):
+                self.db.execute("UPDATE sections SET embedding = ? WHERE id = ?", (enc(vec), s["id"]))
             self.db.execute("INSERT OR REPLACE INTO meta VALUES ('embedder', ?)", (json.dumps(embedder.to_json()),))
         return len(chunks)
 
@@ -163,7 +166,7 @@ class SqliteStore:
         for r in self.db.execute("SELECT * FROM chunks ORDER BY document_id, section_id, ordinal"):
             chunks.append(Chunk(id=r["id"], branch_id=r["section_id"], text=r["text"], context_prefix=r["context_prefix"],
                                 source=docs[r["document_id"]], embedding=dec(r["embedding"])))
-        return Store(HashEmbedder.from_json(json.loads(meta["value"])), branches, chunks)
+        return Store(embedder_from_json(json.loads(meta["value"])), branches, chunks)
 
     def stats(self) -> dict:
         q = lambda sql, *a: self.db.execute(sql, a).fetchall()

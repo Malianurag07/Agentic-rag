@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from .config import Config
 from .embeddings import cosine
 from .models import Candidate, Chunk
+from .retrieval import Retriever, SmallToBigRetriever
 from .store import Store
 from .text import content_stems, content_tokens, tokenize
 from .tools import sanitize, try_calculate
@@ -66,6 +67,9 @@ class Result:
 class Pipeline:
     def __init__(self, store: Store, llm, config: Config | None = None):
         self.store, self.llm, self.config = store, llm, config or Config()
+        self._retrievers: dict = {}
+        kind = getattr(store.embedder, "kind", "")
+        self.hybrid = self.config.retrieval == "hybrid" or (self.config.retrieval == "auto" and kind == "onnx-minilm-l6-v2")
 
     # ---- public entry point -------------------------------------------------------------------------------------------
     def ask(self, question: str, groups=("public",), session: dict | None = None) -> Result:
@@ -143,8 +147,10 @@ class Pipeline:
             cands = self._rank(q, groups)
             log(event="score branches", top=[(c.branch.id, round(c.score, 3)) for c in cands[:5]])
             ids = [c.branch.id for c in cands[:3]]
-            if not cands or cands[0].score < cfg.score_floor:
-                log(event="all scores low", best=cands[0].score if cands else 0)
+            floor_value = (cands[0].score if self.hybrid else cands[0].score) if cands else 0.0
+            floor = cfg.dense_floor if self.hybrid else cfg.score_floor
+            if not cands or floor_value < floor:
+                log(event="all scores low", best=round(floor_value, 3), floor=floor)
                 return self._fallback(q, question, groups, session, trace, budget, ids, tries=0)
 
             if self._topic_only(q, cands[0]):
@@ -155,8 +161,8 @@ class Pipeline:
                               candidate_ids=ids)
 
             gap = cands[0].score - (cands[1].score if len(cands) > 1 else 0.0)
-            confident = gap >= cfg.score_gap_clear
-            if gap >= cfg.score_gap_clear:
+            confident = cands[0].agree if self.hybrid else gap >= cfg.score_gap_clear
+            if confident:
                 pick = cands[0]
                 log(event="clear gap, LLM choice skipped", gap=round(gap, 3), branch=pick.branch.id)
             else:
@@ -213,7 +219,50 @@ class Pipeline:
             cache[chunk.id] = set(content_stems(chunk.embed_text()))
         return cache[chunk.id]
 
+    def _retriever(self, groups):
+        key = tuple(sorted(groups))
+        if key not in self._retrievers:
+            chunks = self.store.visible_chunks(groups)
+            if self.config.parent_child and hasattr(self.store.embedder, "embed_many"):
+                self._retrievers[key] = SmallToBigRetriever(chunks, self.store.embedder, mode="hybrid")
+            else:
+                self._retrievers[key] = Retriever(chunks, self.store.embedder, mode="hybrid")
+        return self._retrievers[key]
+
+    def _rank_hybrid(self, q: str, groups) -> list[Candidate]:
+        """Hybrid retrieval (plan 6.3): chunks ranked by meaning (neural embedding) and by words (BM25), merged by reciprocal rank
+        fusion; a section is ranked by its best chunk. Each candidate carries the best meaning-similarity of its chunks as its
+        score, and `agree` says whether both rankers put the top section first."""
+        retr = self._retriever(groups)
+        detailed = retr.rank_chunks_detailed(q, k=40)
+        leaves = {l.id: l for l in self.store.leaves(groups)}
+        order, dense, d_rank, s_rank = [], {}, {}, {}
+        for chunk, _fused, cos, rd, rs in detailed:
+            b = chunk.branch_id
+            if b not in leaves:
+                continue
+            if b not in order:
+                order.append(b)
+            dense[b] = max(dense.get(b, 0.0), cos)
+            d_rank[b] = min(d_rank.get(b, 10 ** 6), rd)
+            s_rank[b] = min(s_rank.get(b, 10 ** 6), rs)
+        if not order:
+            return []
+        top = order[0]
+        best_dense = min(d_rank, key=d_rank.get)
+        best_word = min(s_rank, key=s_rank.get)
+        others = [dense[b] for b in order[1:]]
+        lead = dense[top] - (max(others) if others else 0.0)
+        out = [Candidate(leaves[b], dense[b], 0.0, dense[b]) for b in order[:self.config.top_k_branches]]
+        out[0].agree = (top == best_dense and top == best_word) or lead >= self.config.dense_gap_clear
+        return out
+
     def _rank(self, q: str, groups) -> list[Candidate]:
+        if self.hybrid:
+            return self._rank_hybrid(q, groups)
+        return self._rank_legacy(q, groups)
+
+    def _rank_legacy(self, q: str, groups) -> list[Candidate]:
         """Score each subsection leaf from two angles and keep the better one: how well its title and opening words match,
         and how well its single best chunk matches (embedding plus shared words). Facts that live deep in a section's body
         are therefore found even when its title says nothing about them. A small weight from the parent topic is added."""
@@ -269,6 +318,20 @@ class Pipeline:
         raw_words, df, n_docs = self.store.vocab(groups)
         try:
             budget.spend("search_all_chunks", q)
+            if self.hybrid:
+                detailed = self._retriever(groups).rank_chunks_detailed(q, k=cfg.fallback_top_k)
+                trace.append({"q": question, "event": "fallback hybrid search",
+                              "top": [(c.id, round(cos, 3)) for c, _f, cos, _a, _b in detailed[:3]]})
+                if detailed and detailed[0][2] >= cfg.dense_floor:
+                    branch = self.store.branches[detailed[0][0].branch_id]
+                    chunks = self._safe_chunks(branch.id, groups, trace, question)
+                    budget.spend("evidence_check", "fallback:" + branch.id)
+                    check = self.llm.check(q, branch, chunks, [], df, n_docs, self.store.branches.get(branch.parent_id))
+                    trace.append({"q": question, "event": "fallback evidence check", "branch": branch.id,
+                                  "ok": check.ok, "reason": check.reason})
+                    if check.ok or (not check.unknown and check.ratio >= cfg.evidence_ratio_confident):
+                        return self._respond(question, q, branch, chunks, session, trace, budget, ids, tries, True)
+                raise LoopDetected("no reliable match")       # handled below as a plain refusal
             qvec = self.store.embedder.embed(q)
             qs = set(content_stems(q))
             scored = []

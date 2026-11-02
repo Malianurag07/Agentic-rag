@@ -16,7 +16,7 @@ def doc_id_for(path: Path) -> str:
 
 
 def ingest_files(paths: list[str | Path], db_path: str | Path = "data/documents.db", config: Config | None = None,
-                 reset: bool = False, log=print) -> SqliteStore:
+                 reset: bool = False, log=print, embedder: str = "hash") -> SqliteStore:
     config = config or Config()
     store = SqliteStore(db_path)
     if reset:
@@ -37,8 +37,8 @@ def ingest_files(paths: list[str | Path], db_path: str | Path = "data/documents.
         log(f"  loaded {path.name}: {len(blocks)} blocks -> {len(tree)} sections -> {n} chunks ({time.time() - t0:.1f}s)")
         changed = True
     if changed:
-        n = store.rebuild_embeddings(config)
-        log(f"  embedded {n} chunks")
+        n = store.rebuild_embeddings(config, embedder)
+        log(f"  embedded {n} chunks with the {embedder} embedder")
     return store
 
 

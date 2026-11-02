@@ -68,10 +68,17 @@ def _pack_rows(rows: list[str], limit: int) -> list[list[str]]:
 FIGURE_CAPTION = re.compile(r"^(\[CHART/FIGURE SUMMARY\]\s*)?Figure\s+\d", re.IGNORECASE)
 
 
-def _split_long(text: str, limit: int) -> list[str]:
+def _split_long(text: str, limit: int, overlap: int = 0) -> list[str]:
     if len(text.split()) <= limit:
         return [text]
-    return [t for t, _, _ in _pack([(s, None) for s in sentences(text)], limit)]
+    pieces = [t for t, _, _ in _pack([(s, None) for s in sentences(text)], limit)]
+    if overlap <= 0:
+        return pieces
+    out = [pieces[0]]
+    for prev, piece in zip(pieces, pieces[1:]):
+        tail = " ".join(sentences(prev)[-overlap:])
+        out.append(f"{tail} {piece}")
+    return out
 
 
 def table_row_text(header: list[str], row: list[str]) -> str:
@@ -94,14 +101,15 @@ def chunk_subsection(sub: Subsection, config: Config) -> list[DocChunk]:
                 ids = sorted({f"R-0{d}" for d in RULE_ID.findall(block.text)})
                 chunks.append(DocChunk("rule", block.text, block.page, block.page, meta={"rule_ids": ids}))
             else:
-                for piece in _split_long(block.text, config.doc_chunk_words):
+                for piece in _split_long(block.text, config.doc_chunk_words, config.chunk_overlap_sentences):
                     pending.append((piece, block.page))
         elif block.kind == "table":
             flush()
             rows = [table_row_text(block.header, r) for r in block.rows]
             last = block.meta.get("last_page", block.page)
             head = f"Table in {sub.number} {sub.title}. Columns: " + " | ".join(h for h in block.header if h) + "."
-            for group in _pack_rows(rows, config.table_chunk_words):
+            groups = [[r] for r in rows] if config.table_row_chunks else _pack_rows(rows, config.table_chunk_words)
+            for group in groups:
                 chunks.append(DocChunk("table", head + " Rows:\n" + "\n".join(f"- {r}" for r in group), block.page, last,
                                        meta={"columns": block.header, "table_rows": len(block.rows)}))
         elif block.kind == "figure":

@@ -34,6 +34,8 @@ def main(argv=None) -> None:
     p.add_argument("files", nargs="+")
     p.add_argument("--db", default="data/documents.db")
     p.add_argument("--reset", action="store_true", help="empty the database first")
+    p.add_argument("--embedder", choices=["neural", "hash"], default="neural",
+                   help="neural = MiniLM sentence embeddings (needs `download-model` once); hash = local keyword vectors")
 
     p = sub.add_parser("db-info", help="show what is stored in the SQLite database")
     p.add_argument("--db", default="data/documents.db")
@@ -45,6 +47,8 @@ def main(argv=None) -> None:
     p.add_argument("--questions", default="data/doc_questions.jsonl")
     p.add_argument("--out", default="reports/docs_latest.json")
 
+    sub.add_parser("download-model", help="download and verify the neural embedding model (about 83 MB, once)")
+
     sub.add_parser("chat", help="interactive session with follow-up memory")
 
     p = sub.add_parser("eval", help="run the test set")
@@ -52,9 +56,13 @@ def main(argv=None) -> None:
     p.add_argument("--out", default="reports/latest.json")
 
     args = ap.parse_args(argv)
+    if args.cmd == "download-model":
+        from .neural import download_model
+        download_model()
+        return
     if args.cmd == "ingest-docs":
         from .ingest_docs import format_stats, ingest_files
-        store = ingest_files(args.files, args.db, reset=args.reset)
+        store = ingest_files(args.files, args.db, reset=args.reset, embedder=args.embedder)
         print(format_stats(store.stats()))
         return
     if args.cmd == "eval-docs":

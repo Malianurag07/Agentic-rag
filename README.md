@@ -17,7 +17,7 @@ python3 -m agentic_rag ask "What are the refund fraud checks?" --groups staff,pu
 python3 -m agentic_rag chat                         # follow-up questions work in a session
 python3 -m agentic_rag eval                         # run data/testset.jsonl
 python3 -m agentic_rag eval --testset data/holdout.jsonl --out reports/holdout.json
-python3 -m unittest discover -s tests               # 47 unit tests
+python3 -m unittest discover -s tests               # 60 unit tests (neural tests run once the model is downloaded)
 ```
 
 ## How it maps to the plan
@@ -81,35 +81,50 @@ question, follow-ups, and six that the documents cannot answer (including a dres
 `tests/test_doc_questions.py` checks the **answer key**: each expected fact must exist in the stored text of the PDF, the DOCX and
 the TXT. These questions have not been run through the retrieval pipeline yet.
 
-### Results on the document questions (offline mode)
+### Chunking, embeddings and retrieval
 
 ```bash
-python3 -m agentic_rag eval-docs                                              # 50 questions x PDF, DOCX, TXT = 150 runs
-python3 -m agentic_rag eval-docs --questions data/doc_questions_holdout.jsonl  # 25 fresh questions x 3 formats = 75 runs
+python3 -m agentic_rag download-model                                   # once: 83 MB MiniLM model, SHA-256 verified
+python3 -m agentic_rag ingest-docs <files> --reset --embedder neural   # neural embeddings (use --embedder hash to skip the model)
+python3 -m agentic_rag eval-docs --questions data/doc_questions_test.jsonl
 ```
 
-Two question sets, because the first was used to find and fix problems (so its score is optimistic), while the second (written
-before the changes below and never tuned on) shows how the pipeline does on questions it has not seen.
+What changed, measured **without the judgment layer** (does the retriever put the answer in front of the rest of the pipeline?).
+65 answerable tuning questions and 22 answerable questions that were never tuned on, each asked of the PDF, DOCX and TXT:
 
-| | Before the changes | After the changes |
+| Retrieval setup | Section ranked 1st | Section in top 3 | Answer text in top 3 chunks | in top 5 chunks |
+|---|---|---|---|---|
+| Old: hash embeddings, similarity only (tuning) | 51% | 66% | 61% | 72% |
+| **New: neural + BM25 hybrid (tuning)** | 66% | 88% | 83% | 91% |
+| Old (untouched test set) | 42% | 64% | 58% | 64% |
+| **New (untouched test set)** | **68%** | **91%** | **94%** | **100%** |
+
+- **Embeddings:** `all-MiniLM-L6-v2` (neural, 384 dimensions, ONNX on CPU). It matches by meaning, so "how long are chat messages
+  kept" finds "Ephemeral Messaging ... 180 calendar days". Inputs are cut at 256 word-pieces, so chunks stay under about 150 to 220 words.
+- **Retrieval:** dense (meaning) and BM25 (words, with stemming) rankings merged by reciprocal rank fusion; sections are ranked by
+  their best chunk. BM25 alone already beat the old setup, and the fusion beats either alone.
+- **Chunking** (all tested; the first four changed nothing worth keeping): paragraph size 90 to 220 words, table group size,
+  one-sentence overlap, and adding the section title to each chunk all landed within noise (about 2 points). **Row-level table chunks
+  hurt** (answer text in top 3 fell from 83% to 74%) because answers often need several rows of one table. **Parent-child
+  retrieval** (match on single rows and sentence pairs, return the whole parent chunk; `parent_child` in `config.py`) keeps the ranking
+  and makes the similarity score sharper, which the "nothing matches" floor relies on.
+
+End-to-end pass rate (judgment layer unchanged), before the retrieval work -> after:
+
+| Question set | Before | After |
 |---|---|---|
-| 50 questions (used while tuning) | 36.0% | 56.7% |
-| **25 fresh questions (not tuned on)** | **26.7%** | **34.7%** |
-| Right section among the top 3 candidates (fresh) | 32% | 77% |
-| Right section chosen first (fresh) | 23% | 35% |
-| Precision when it answers (fresh) | n/a | 79% |
-| Multi-part questions (fresh) | 0 of 18 | 6 of 18 |
+| 50 questions (used for tuning) | 56.7% | 60.0% |
+| 25 questions (used for tuning) | 34.7% | 40.0% |
+| **25 fresh questions (never tuned on)** | **40.0%** | **36.0%** |
 
-The changes: sections are scored on their body as well as their title (best matching chunk, plus a short summary of each section);
-subsection titles are no longer cut at the first colon; multi-part questions are split into sub-questions; the evidence check
-accepts a lower bar when retrieval has a clear lead; table answers pick the matching rows; and a question that uses words the
-knowledge base has never seen is refused instead of answered with a clarifying question.
-
-Where the 22 answerable fresh questions end up (TXT): 7 correct; 10 had the right section as a candidate but were refused or
-answered with a clarifying question (the keyword evidence check); 5 never reached the right section. Of the 6 fresh unanswerable
-questions the pipeline invented an answer for 2 (a "salary" question answered with the grade table, and a "cloud provider"
-question matched on the word "cloud"). 25 fresh questions is a small sample: treat the percentages as +/- 10 points.
-Reports: `reports/docs_baseline.json`, `reports/docs_after.json`, `reports/docs_holdout_before.json`, `reports/docs_holdout_after.json`.
+**The retrieval is no longer the bottleneck; the judgment layer is.** On the fresh questions the answer text is in the top 5 chunks
+for 100% of answerable questions, yet only 7 of 22 are answered correctly: 10 are refused or met with a clarifying question after
+the right section was found (the keyword evidence check rejects paraphrases), 3 never reach the right section, 1 is answered from
+the wrong section, 1 has the right section but the wrong facts. Better retrieval also makes the pipeline more willing to answer
+weakly supported trap questions (for example "paying vendors in cryptocurrency", answered from the procurement section); the
+relaxed evidence rule accepts them. Both are judgment-layer behaviours, left unchanged on purpose.
+Samples are small (22 to 65 answerable questions): treat percentages as plus or minus 10 points.
+Reports: `reports/docs_old_test.json`, `reports/docs_final_test.json`, `reports/docs_pc_*.json`.
 
 ### Known limits of this step
 

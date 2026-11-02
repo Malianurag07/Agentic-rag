@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FILES = [ROOT / "Rag testing doc.pdf", ROOT / "enterprise_company_policy_manual.docx", ROOT / "enterprise_company_policy_manual.txt"]
 QUESTIONS = ROOT / "data" / "doc_questions.jsonl"
 HOLDOUT = ROOT / "data" / "doc_questions_holdout.jsonl"
+TESTSET = ROOT / "data" / "doc_questions_test.jsonl"
 
 
 def norm(s: str) -> str:
@@ -23,7 +24,7 @@ def load_questions(path: Path = QUESTIONS) -> list[dict]:
     return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
 
 
-@unittest.skipUnless(all(f.exists() for f in FILES) and QUESTIONS.exists() and HOLDOUT.exists(), "documents or question files missing")
+@unittest.skipUnless(all(f.exists() for f in FILES) and QUESTIONS.exists() and HOLDOUT.exists() and TESTSET.exists(), "documents or question files missing")
 class AnswerKey(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -32,7 +33,8 @@ class AnswerKey(unittest.TestCase):
         cls.docs = [r["id"] for r in cls.store.db.execute("SELECT id FROM documents")]
         cls.main = load_questions()
         cls.holdout = load_questions(HOLDOUT)
-        cls.questions = cls.main + cls.holdout       # the answer key of both sets is validated
+        cls.testset = load_questions(TESTSET)
+        cls.questions = cls.main + cls.holdout + cls.testset      # the answer key of all three sets is validated
 
     @classmethod
     def tearDownClass(cls):
@@ -97,6 +99,11 @@ class AnswerKey(unittest.TestCase):
     def test_holdout_has_25_questions_that_do_not_overlap_the_main_set(self):
         self.assertEqual(len(self.holdout), 25)
         self.assertFalse({q["question"].lower() for q in self.main} & {q["question"].lower() for q in self.holdout})
+
+    def test_untouched_test_set_has_25_questions_and_no_overlap(self):
+        self.assertEqual(len(self.testset), 25)
+        earlier = {q["question"].lower() for q in self.main + self.holdout}
+        self.assertFalse(earlier & {q["question"].lower() for q in self.testset})
 
     def test_chart_totals_in_the_text_are_consistent_with_the_chart_questions(self):
         for doc in self.docs:                                                     # the caption states the total, not the split

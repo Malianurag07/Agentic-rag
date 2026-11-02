@@ -44,6 +44,7 @@ class Candidate:
     topic_score: float = 0.0
     child_score: float = 0.0
     blocked_reason: str | None = None    # set when soft-blocked for the current question
+    agree: bool = False                  # hybrid retrieval: the dense and keyword rankers both put this section first (or it leads clearly)
 
 
 @dataclass

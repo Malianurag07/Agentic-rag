@@ -1,3 +1,10 @@
-# The offline mode (default) needs nothing beyond the Python 3.11+ standard library.
-# Optional: use Claude as the judgment layer (`--llm claude`).
+# The offline mode (default, hash embeddings) needs nothing beyond the Python 3.11+ standard library.
+# PDF / DOCX ingestion:
+pdfplumber
+python-docx
+# Neural embeddings and hybrid retrieval (recommended): python3 -m agentic_rag download-model
+numpy
+onnxruntime
+tokenizers
+# Optional: use Claude as the judgment layer (--llm claude)
 anthropic>=1.0

@@ -71,3 +71,18 @@ def cosine(a: Vec, b: Vec) -> float:
     if len(a) > len(b):
         a, b = b, a
     return sum(v * b.get(k, 0.0) for k, v in a.items())
+
+
+def embedder_from_json(data: dict):
+    """Rebuild the embedder a database was created with (the stored vectors only make sense with the same model)."""
+    if data.get("kind") == "onnx-minilm-l6-v2":
+        from .neural import MiniLMEmbedder
+        return MiniLMEmbedder.from_json(data)
+    return HashEmbedder.from_json(data)
+
+
+def make_embedder(kind: str, dim: int = 2048):
+    if kind == "neural":
+        from .neural import MiniLMEmbedder
+        return MiniLMEmbedder()
+    return HashEmbedder(dim=dim)
