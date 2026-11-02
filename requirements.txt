@@ -1,0 +1,3 @@
+# The offline mode (default) needs nothing beyond the Python 3.11+ standard library.
+# Optional: use Claude as the judgment layer (`--llm claude`).
+anthropic>=1.0

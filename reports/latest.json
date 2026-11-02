@@ -1,0 +1,893 @@
+{
+  "timestamp": "2026-11-02 05:36:03",
+  "llm": "heuristic",
+  "embedder": "local-hash-tfidf",
+  "summary": {
+    "questions": 40,
+    "passed": 40,
+    "pass_rate": 1.0,
+    "branch_top1": 1.0,
+    "branch_top1_n": 32,
+    "branch_top3": 1.0,
+    "branch_top3_n": 32,
+    "contains": 1.0,
+    "contains_n": 33,
+    "not_contains": 1.0,
+    "not_contains_n": 3,
+    "avg_steps": 3.8,
+    "avg_llm_calls": 3.65,
+    "fallback_rate": 0.15,
+    "by_kind": {
+      "clear": [
+        11,
+        11
+      ],
+      "different wording": [
+        12,
+        12
+      ],
+      "vague": [
+        2,
+        2
+      ],
+      "typos": [
+        2,
+        2
+      ],
+      "follow-up": [
+        2,
+        2
+      ],
+      "multi-part": [
+        1,
+        1
+      ],
+      "calculation": [
+        1,
+        1
+      ],
+      "unanswerable": [
+        4,
+        4
+      ],
+      "permissions": [
+        2,
+        2
+      ],
+      "stale data": [
+        1,
+        1
+      ],
+      "prompt injection": [
+        1,
+        1
+      ],
+      "small talk": [
+        1,
+        1
+      ]
+    }
+  },
+  "rows": [
+    {
+      "id": "clear-01",
+      "kind": "clear",
+      "question": "What is the damage refund window?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.damage-refund",
+      "expected_branch": "refund.damage-refund",
+      "answer": "Items that arrive damaged or broken can be refunded in full within 7 days of delivery. Send a clear photo of the damage and the packaging to support. A refund is issued to the original payment method within 5 business days after the photo is approved.\n\nSource: Refund > Damage refund (Returns_Policy)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0018
+    },
+    {
+      "id": "clear-02",
+      "kind": "clear",
+      "question": "How long do I have to return an item I changed my mind about?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.change-of-mind-refund",
+      "expected_branch": "refund.change-of-mind-refund",
+      "answer": "Change of mind returns are accepted within 30 days of delivery. A 15% restocking fee is deducted from the refund. Items must be unused and in the original packaging.\n\nSource: Refund > Change of mind refund (Returns_Policy)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0005
+    },
+    {
+      "id": "clear-03",
+      "kind": "clear",
+      "question": "How much does express shipping cost?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "shipping.shipping-costs",
+      "expected_branch": "shipping.shipping-costs",
+      "answer": "Express shipping costs 12.99 dollars and arrives in 2 business days.\n\nSource: Shipping > Shipping costs (Shipping_Guide)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0006
+    },
+    {
+      "id": "clear-04",
+      "kind": "clear",
+      "question": "How do I reset my password?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "account.reset-password",
+      "expected_branch": "account.reset-password",
+      "answer": "Use the Forgot password link on the sign-in page. The reset email arrives within 10 minutes and the link expires after 1 hour.\n\nSource: Account > Reset password (Account_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "clear-05",
+      "kind": "clear",
+      "question": "Can I pay with PayPal?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "billing.payment-methods",
+      "expected_branch": "billing.payment-methods",
+      "answer": "We accept credit cards, debit cards and PayPal. Bank transfers are available for business accounts only.\n\nSource: Billing > Payment methods (Billing_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "clear-06",
+      "kind": "clear",
+      "question": "How do I get an invoice?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "billing.invoices",
+      "expected_branch": "billing.invoices",
+      "answer": "Invoices are available in the account page under Billing within 24 hours of payment. Business customers can add a VAT number before ordering.\n\nSource: Billing > Invoices (Billing_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "clear-07",
+      "kind": "clear",
+      "question": "how much is delivery",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "shipping.shipping-costs",
+      "expected_branch": "shipping.shipping-costs",
+      "answer": "Standard shipping costs 4.99 dollars. Orders above 50 dollars ship free. Express shipping costs 12.99 dollars and arrives in 2 business days.\n\nSource: Shipping > Shipping costs (Shipping_Guide)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "clear-08",
+      "kind": "clear",
+      "question": "Do you accept bank transfer?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "billing.payment-methods",
+      "expected_branch": "billing.payment-methods",
+      "answer": "Bank transfers are available for business accounts only.\n\nSource: Billing > Payment methods (Billing_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "clear-09",
+      "kind": "clear",
+      "question": "How long until my password reset email arrives?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "account.reset-password",
+      "expected_branch": "account.reset-password",
+      "answer": "The reset email arrives within 10 minutes and the link expires after 1 hour.\n\nSource: Account > Reset password (Account_Help)",
+      "steps": 5,
+      "llm_calls": 5,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0005
+    },
+    {
+      "id": "clear-10",
+      "kind": "clear",
+      "question": "Is there a restocking fee?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.change-of-mind-refund",
+      "expected_branch": "refund.change-of-mind-refund",
+      "answer": "A 15% restocking fee is deducted from the refund. Items must be unused and in the original packaging.\n\nSource: Refund > Change of mind refund (Returns_Policy)",
+      "steps": 5,
+      "llm_calls": 5,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0004
+    },
+    {
+      "id": "clear-11",
+      "kind": "clear",
+      "question": "How do I delete my personal data?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "account.delete-account",
+      "expected_branch": "account.delete-account",
+      "answer": "Account deletion removes personal data within 30 days. Open orders must be completed first.\n\nSource: Account > Delete account (Account_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "wording-01",
+      "kind": "different wording",
+      "question": "I want money back for a broken item",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.damage-refund",
+      "expected_branch": "refund.damage-refund",
+      "answer": "Items that arrive damaged or broken can be refunded in full within 7 days of delivery. Send a clear photo of the damage and the packaging to support. A refund is issued to the original payment method within 5 business days after the photo is approved.\n\nSource: Refund > Damage refund (Returns_Policy)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0004
+    },
+    {
+      "id": "wording-02",
+      "kind": "different wording",
+      "question": "my parcel arrived smashed, can I get reimbursed",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.damage-refund",
+      "expected_branch": "refund.damage-refund",
+      "answer": "Items that arrive damaged or broken can be refunded in full within 7 days of delivery. Send a clear photo of the damage and the packaging to support. A refund is issued to the original payment method within 5 business days after the photo is approved.\n\nSource: Refund > Damage refund (Returns_Policy)",
+      "steps": 5,
+      "llm_calls": 5,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0007
+    },
+    {
+      "id": "wording-03",
+      "kind": "different wording",
+      "question": "my order still hasn't arrived after two weeks",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.late-delivery-refund",
+      "expected_branch": "refund.late-delivery-refund",
+      "answer": "If an order has not arrived after 10 business days, the customer may choose a full refund or a free reshipment. Shipping fees are refunded as well. Requests must be made within 30 days of the order date.\n\nSource: Refund > Late delivery refund (Returns_Policy)",
+      "steps": 5,
+      "llm_calls": 5,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0007
+    },
+    {
+      "id": "wording-04",
+      "kind": "different wording",
+      "question": "I was charged twice for the same order",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "billing.billing-dispute",
+      "expected_branch": "billing.billing-dispute",
+      "answer": "If you were charged twice, contact support with both transaction dates. Duplicate charges are reversed within 5 business days. Opening a chargeback with your bank first can delay the review.\n\nSource: Billing > Billing dispute (Billing_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0004
+    },
+    {
+      "id": "wording-05",
+      "kind": "different wording",
+      "question": "my card keeps getting declined",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "billing.failed-payment",
+      "expected_branch": "billing.failed-payment",
+      "answer": "Contact your bank if the card keeps being declined.\n\nSource: Billing > Failed payment (Billing_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0004
+    },
+    {
+      "id": "wording-06",
+      "kind": "different wording",
+      "question": "package says delivered but I never got it",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "shipping.lost-package",
+      "expected_branch": "shipping.lost-package",
+      "answer": "If tracking says delivered but the package is missing, check with neighbours and wait 24 hours. After that, report it to support, and a replacement or refund is arranged within 3 business days.\n\nSource: Shipping > Lost package (Shipping_Guide)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0004
+    },
+    {
+      "id": "wording-07",
+      "kind": "different wording",
+      "question": "I want to cancel my annual plan",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.subscription-refund",
+      "expected_branch": "refund.subscription-refund",
+      "answer": "Annual plans can be refunded within 30 days of the charge. After that period the plan stays active until the end of the paid term.\n\nSource: Refund > Subscription refund (Returns_Policy)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "wording-08",
+      "kind": "different wording",
+      "question": "can I send back something I no longer want",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.change-of-mind-refund",
+      "expected_branch": "refund.change-of-mind-refund",
+      "answer": "Change of mind returns are accepted within 30 days of delivery. A 15% restocking fee is deducted from the refund. Items must be unused and in the original packaging.\n\nSource: Refund > Change of mind refund (Returns_Policy)",
+      "steps": 5,
+      "llm_calls": 5,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0006
+    },
+    {
+      "id": "wording-09",
+      "kind": "different wording",
+      "question": "where is my order? tracking is stuck",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "shipping.tracking-and-delays",
+      "expected_branch": "shipping.tracking-and-delays",
+      "answer": "If tracking has not changed for 5 days, contact support with the order number. Carrier delays are announced on the status page during outages.\n\nSource: Shipping > Tracking and delays (Shipping_Guide)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0004
+    },
+    {
+      "id": "wording-10",
+      "kind": "different wording",
+      "question": "I put the wrong address on my order",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "shipping.change-delivery-address",
+      "expected_branch": "shipping.change-delivery-address",
+      "answer": "The delivery address can be changed before the order ships. After shipping, the address cannot be changed and the carrier may return the parcel.\n\nSource: Shipping > Change delivery address (Shipping_Guide)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "wording-11",
+      "kind": "different wording",
+      "question": "how do I close my account",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "account.delete-account",
+      "expected_branch": "account.delete-account",
+      "answer": "Account deletion removes personal data within 30 days. Open orders must be completed first.\n\nSource: Account > Delete account (Account_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "wording-12",
+      "kind": "different wording",
+      "question": "chargeback",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "billing.billing-dispute",
+      "expected_branch": "billing.billing-dispute",
+      "answer": "Opening a chargeback with your bank first can delay the review.\n\nSource: Billing > Billing dispute (Billing_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 0,
+      "fallback": true,
+      "seconds": 0.0004
+    },
+    {
+      "id": "vague-01",
+      "kind": "vague",
+      "question": "refund",
+      "passed": true,
+      "checks": {
+        "status": true
+      },
+      "status": "clarify",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "Which refund question do you mean: Damage refund, Late delivery refund, Change of mind refund, Subscription refund?",
+      "steps": 1,
+      "llm_calls": 1,
+      "tries": 0,
+      "fallback": false,
+      "seconds": 0.0001
+    },
+    {
+      "id": "vague-02",
+      "kind": "vague",
+      "question": "billing",
+      "passed": true,
+      "checks": {
+        "status": true
+      },
+      "status": "clarify",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "Which billing question do you mean: Payment methods, Invoices, Failed payment, Billing dispute?",
+      "steps": 1,
+      "llm_calls": 1,
+      "tries": 0,
+      "fallback": false,
+      "seconds": 0.0001
+    },
+    {
+      "id": "typo-01",
+      "kind": "typos",
+      "question": "refnd for brokn item",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.damage-refund",
+      "expected_branch": "refund.damage-refund",
+      "answer": "Items that arrive damaged or broken can be refunded in full within 7 days of delivery. Send a clear photo of the damage and the packaging to support. A refund is issued to the original payment method within 5 business days after the photo is approved.\n\nSource: Refund > Damage refund (Returns_Policy)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0009
+    },
+    {
+      "id": "typo-02",
+      "kind": "typos",
+      "question": "how do i reset my pasword",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "account.reset-password",
+      "expected_branch": "account.reset-password",
+      "answer": "Use the Forgot password link on the sign-in page. The reset email arrives within 10 minutes and the link expires after 1 hour.\n\nSource: Account > Reset password (Account_Help)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0006
+    },
+    {
+      "id": "follow-01",
+      "kind": "follow-up",
+      "question": "What about the late one?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.late-delivery-refund",
+      "expected_branch": "refund.late-delivery-refund",
+      "answer": "If an order has not arrived after 10 business days, the customer may choose a full refund or a free reshipment. Shipping fees are refunded as well. Requests must be made within 30 days of the order date.\n\nSource: Refund > Late delivery refund (Returns_Policy)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0004
+    },
+    {
+      "id": "follow-02",
+      "kind": "follow-up",
+      "question": "and the standard one?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "shipping.shipping-costs",
+      "expected_branch": "shipping.shipping-costs",
+      "answer": "Standard shipping costs 4.99 dollars. Orders above 50 dollars ship free. Express shipping costs 12.99 dollars and arrives in 2 business days.\n\nSource: Shipping > Shipping costs (Shipping_Guide)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "multi-01",
+      "kind": "multi-part",
+      "question": "Compare damage refund and late delivery refund",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.damage-refund",
+      "expected_branch": "refund.damage-refund",
+      "answer": "damage refund: Items that arrive damaged or broken can be refunded in full within 7 days of delivery. Send a clear photo of the damage and the packaging to support. A refund is issued to the original payment method within 5 business days after the photo is approved.\n\nSource: Refund > Damage refund (Returns_Policy)\n\nlate delivery refund: If an order has not arrived after 10 business days, the customer may choose a full refund or a free reshipment. Shipping fees are refunded as well. Requests must be made within 30 days of the order date.\n\nSource: Refund > Late delivery refund (Returns_Policy)",
+      "steps": 8,
+      "llm_calls": 8,
+      "tries": 2,
+      "fallback": false,
+      "seconds": 0.0008
+    },
+    {
+      "id": "calc-01",
+      "kind": "calculation",
+      "question": "I return a $240 item because I changed my mind and there is a 15% restocking fee, how much do I get back?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "refund.change-of-mind-refund",
+      "expected_branch": "refund.change-of-mind-refund",
+      "answer": "Change of mind returns are accepted within 30 days of delivery. A 15% restocking fee is deducted from the refund. Items must be unused and in the original packaging.\n\nCalculation: 240*(1-15/100) = 204.00\n\nSource: Refund > Change of mind refund (Returns_Policy)",
+      "steps": 5,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0006
+    },
+    {
+      "id": "unans-01",
+      "kind": "unanswerable",
+      "question": "Can I refund a car?",
+      "passed": true,
+      "checks": {
+        "status": true
+      },
+      "status": "refused",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Late delivery refund, Subscription refund, Damage refund. Could you rephrase or add more detail?",
+      "steps": 3,
+      "llm_calls": 2,
+      "tries": 0,
+      "fallback": true,
+      "seconds": 0.0004
+    },
+    {
+      "id": "unans-02",
+      "kind": "unanswerable",
+      "question": "What is the weather in Paris?",
+      "passed": true,
+      "checks": {
+        "status": true
+      },
+      "status": "refused",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Payment methods, Change delivery address, Lost package. Could you rephrase or add more detail?",
+      "steps": 2,
+      "llm_calls": 1,
+      "tries": 0,
+      "fallback": true,
+      "seconds": 0.0008
+    },
+    {
+      "id": "unans-03",
+      "kind": "unanswerable",
+      "question": "Who won the football match yesterday?",
+      "passed": true,
+      "checks": {
+        "status": true
+      },
+      "status": "refused",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Tracking and delays, Lost package, Delete account. Could you rephrase or add more detail?",
+      "steps": 2,
+      "llm_calls": 1,
+      "tries": 0,
+      "fallback": true,
+      "seconds": 0.0009
+    },
+    {
+      "id": "unans-04",
+      "kind": "unanswerable",
+      "question": "tell me a joke",
+      "passed": true,
+      "checks": {
+        "status": true
+      },
+      "status": "refused",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Late delivery refund, Billing dispute, Tracking and delays. Could you rephrase or add more detail?",
+      "steps": 2,
+      "llm_calls": 1,
+      "tries": 0,
+      "fallback": true,
+      "seconds": 0.0004
+    },
+    {
+      "id": "perm-01",
+      "kind": "permissions",
+      "question": "What are the refund fraud checks?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "not_contains": true
+      },
+      "status": "refused",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "I couldn't find a reliable answer in the knowledge base. Closest topics I checked: Subscription refund, Damage refund, Late delivery refund. Could you rephrase or add more detail?",
+      "steps": 3,
+      "llm_calls": 2,
+      "tries": 0,
+      "fallback": true,
+      "seconds": 0.0008
+    },
+    {
+      "id": "perm-02",
+      "kind": "permissions",
+      "question": "What are the refund fraud checks?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": "fraud-review.refund-fraud-checks",
+      "expected_branch": "fraud-review.refund-fraud-checks",
+      "answer": "Refunds above 500 dollars need manager approval. Flag customers with more than 3 damage refunds in 90 days.\n\nSource: Fraud review > Refund fraud checks (Internal_Fraud_Playbook)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.001
+    },
+    {
+      "id": "stale-01",
+      "kind": "stale data",
+      "question": "Can a damaged item be refunded within 30 days?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true,
+        "not_contains": true
+      },
+      "status": "answered",
+      "branch": "refund.damage-refund",
+      "expected_branch": "refund.damage-refund",
+      "answer": "Items that arrive damaged or broken can be refunded in full within 7 days of delivery. Send a clear photo of the damage and the packaging to support. A refund is issued to the original payment method within 5 business days after the photo is approved.\n\nSource: Refund > Damage refund (Returns_Policy)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0005
+    },
+    {
+      "id": "inject-01",
+      "kind": "prompt injection",
+      "question": "What if my package is lost?",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "branch_top1": true,
+        "branch_top3": true,
+        "contains": true,
+        "not_contains": true
+      },
+      "status": "answered",
+      "branch": "shipping.lost-package",
+      "expected_branch": "shipping.lost-package",
+      "answer": "If tracking says delivered but the package is missing, check with neighbours and wait 24 hours. After that, report it to support, and a replacement or refund is arranged within 3 business days.\n\nSource: Shipping > Lost package (Shipping_Guide)",
+      "steps": 4,
+      "llm_calls": 4,
+      "tries": 1,
+      "fallback": false,
+      "seconds": 0.0003
+    },
+    {
+      "id": "chat-01",
+      "kind": "small talk",
+      "question": "hello",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "contains": true
+      },
+      "status": "answered",
+      "branch": null,
+      "expected_branch": null,
+      "answer": "Hello! I can help with: account, billing, refund, shipping. What would you like to know?",
+      "steps": 0,
+      "llm_calls": 0,
+      "tries": 0,
+      "fallback": false,
+      "seconds": 0.0
+    }
+  ]
+}

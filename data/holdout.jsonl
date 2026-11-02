@@ -1,0 +1,28 @@
+{"id":"h-01","kind":"different wording","question":"The vase I ordered came in pieces. What can I do?","branch":"refund.damage-refund","contains":["7 days"]}
+{"id":"h-02","kind":"different wording","question":"I need my money back, the item was faulty and cracked when it showed up","branch":"refund.damage-refund","contains":["7 days"]}
+{"id":"h-03","kind":"different wording","question":"It has been three weeks and nothing has been delivered","branch":"refund.late-delivery-refund","contains":["10 business days"]}
+{"id":"h-04","kind":"different wording","question":"Can I get a reshipment since my order is late?","branch":"refund.late-delivery-refund","contains":["reshipment"]}
+{"id":"h-05","kind":"different wording","question":"I no longer want the shoes I bought, can I return them?","branch":"refund.change-of-mind-refund","contains":["30 days"]}
+{"id":"h-06","kind":"different wording","question":"How do I cancel my monthly membership and get a refund?","branch":"refund.subscription-refund","contains":["7 days"]}
+{"id":"h-07","kind":"different wording","question":"What does standard delivery cost?","branch":"shipping.shipping-costs","contains":["4.99"]}
+{"id":"h-08","kind":"different wording","question":"Is there free shipping on big orders?","branch":"shipping.shipping-costs","contains":["50 dollars"]}
+{"id":"h-09","kind":"different wording","question":"The courier says it was delivered but my doorstep is empty","branch":"shipping.lost-package","contains":["24 hours"]}
+{"id":"h-10","kind":"different wording","question":"Tracking has shown the same status for a week","branch":"shipping.tracking-and-delays","contains":["5 days"]}
+{"id":"h-11","kind":"different wording","question":"Can I change where my parcel is sent before it ships?","branch":"shipping.change-delivery-address","contains":["before the order ships"]}
+{"id":"h-12","kind":"different wording","question":"Which cards do you take?","branch":"billing.payment-methods","contains":["credit cards"]}
+{"id":"h-13","kind":"different wording","question":"I need a VAT receipt for my company","branch":"billing.invoices","contains":["VAT"]}
+{"id":"h-14","kind":"different wording","question":"My payment did not go through, what happens to my order?","branch":"billing.failed-payment","contains":["24 hours"]}
+{"id":"h-15","kind":"different wording","question":"There is an unknown charge on my statement","branch":"billing.billing-dispute","contains":["transaction dates"]}
+{"id":"h-16","kind":"different wording","question":"I can't log in, I forgot my password","branch":"account.reset-password","contains":["Forgot password"]}
+{"id":"h-17","kind":"different wording","question":"Please erase all my personal information","branch":"account.delete-account","contains":["30 days"]}
+{"id":"h-18","kind":"typos","question":"how long do i have to retrn an itme i dont want","branch":"refund.change-of-mind-refund","contains":["30 days"]}
+{"id":"h-19","kind":"follow-up","history":["Can I pay with PayPal?"],"question":"what about invoices?","branch":"billing.invoices","contains":["24 hours"]}
+{"id":"h-20","kind":"multi-part","question":"Compare standard shipping and express shipping","branch":"shipping.shipping-costs","contains":["4.99","12.99"]}
+{"id":"h-21","kind":"calculation","question":"If I send back a $80 jacket I no longer want and there is a 15% fee, what do I get?","branch":"refund.change-of-mind-refund","contains":["68"]}
+{"id":"h-22","kind":"unanswerable","question":"Do you sell gift cards?","status":"refused"}
+{"id":"h-23","kind":"unanswerable","question":"How do I file my taxes?","status":"refused"}
+{"id":"h-24","kind":"unanswerable","question":"Can I return a house?","status":"refused"}
+{"id":"h-25","kind":"vague","question":"shipping","status":"clarify"}
+{"id":"h-26","kind":"permissions","question":"Do damage refunds above 500 dollars need manager approval?","status":"any","not_contains":["Flag customers"]}
+{"id":"h-27","kind":"permissions","groups":["staff","public"],"question":"When do I flag a customer for too many damage refunds?","branch":"fraud-review.refund-fraud-checks","contains":["3 damage refunds"]}
+{"id":"h-28","kind":"small talk","question":"thanks","status":"answered","contains":["help"]}
