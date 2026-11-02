@@ -17,7 +17,7 @@ python3 -m agentic_rag ask "What are the refund fraud checks?" --groups staff,pu
 python3 -m agentic_rag chat                         # follow-up questions work in a session
 python3 -m agentic_rag eval                         # run data/testset.jsonl
 python3 -m agentic_rag eval --testset data/holdout.jsonl --out reports/holdout.json
-python3 -m unittest discover -s tests               # 41 unit tests
+python3 -m unittest discover -s tests               # 46 unit tests
 ```
 
 ## How it maps to the plan
@@ -72,6 +72,14 @@ line, with the table title and column names repeated on every chunk; keeps chart
 - Chunk text is identical between formats for 89 to 97% of chunks.
 - The five repeated golden rules are stored as 17 rule chunks: R-01 x4, R-02 x4, R-03 x3, R-04 x3, R-05 x3, matching the source.
 - SQLite integrity check passes; every chunk has an embedding and a keyword-index row.
+
+### Test questions for these documents
+
+[`DOC_TEST_QUESTIONS.md`](DOC_TEST_QUESTIONS.md) lists 50 questions (machine-readable: `data/doc_questions.jsonl`): single facts, table
+lookups, 12 multi-part questions that need more than one section, the five repeated golden rules, paraphrases, typos, a vague
+question, follow-ups, and six that the documents cannot answer (including a dress-code trap and two chart-only questions).
+`tests/test_doc_questions.py` checks the **answer key**: each expected fact must exist in the stored text of the PDF, the DOCX and
+the TXT. These questions have not been run through the retrieval pipeline yet.
 
 ### Known limits of this step
 

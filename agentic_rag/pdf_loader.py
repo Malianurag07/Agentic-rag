@@ -63,10 +63,16 @@ def _mark_bold(page, words: list[dict]) -> None:
 
 
 # ---- low-level helpers ----------------------------------------------------------------------------------------------------
-def _group_lines(words: list[dict], tol: float = 3.0) -> list[list[dict]]:
+def _centre(w: dict) -> float:
+    return (w["top"] + w["bottom"]) / 2
+
+
+def _group_lines(words: list[dict], tol: float = 3.5) -> list[list[dict]]:
+    """Group words into visual lines by the vertical CENTRE of their boxes. (Not the top edge: a hyperlink is drawn in a
+    shorter box, so its top edge sits several points below the surrounding words even though it is on the same line.)"""
     lines: list[list[dict]] = []
-    for w in sorted(words, key=lambda w: (w["top"], w["x0"])):
-        if lines and abs(w["top"] - lines[-1][0]["top"]) <= tol:
+    for w in sorted(words, key=lambda w: (_centre(w), w["x0"])):
+        if lines and abs(_centre(w) - _centre(lines[-1][0])) <= tol:
             lines[-1].append(w)
         else:
             lines.append([w])
