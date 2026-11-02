@@ -40,6 +40,11 @@ def main(argv=None) -> None:
     p.add_argument("--section", help="print the chunks of one subsection, e.g. 3.2")
     p.add_argument("--search", help="keyword search (FTS5) over all chunks")
 
+    p = sub.add_parser("eval-docs", help="run data/doc_questions.jsonl against the SQLite documents (all three formats)")
+    p.add_argument("--db", default="data/documents.db")
+    p.add_argument("--questions", default="data/doc_questions.jsonl")
+    p.add_argument("--out", default="reports/docs_latest.json")
+
     sub.add_parser("chat", help="interactive session with follow-up memory")
 
     p = sub.add_parser("eval", help="run the test set")
@@ -51,6 +56,14 @@ def main(argv=None) -> None:
         from .ingest_docs import format_stats, ingest_files
         store = ingest_files(args.files, args.db, reset=args.reset)
         print(format_stats(store.stats()))
+        return
+    if args.cmd == "eval-docs":
+        from . import doc_eval
+        report = doc_eval.run(args.db, args.questions, args.llm)
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(json.dumps(report, indent=2, default=str))
+        print(doc_eval.format_report(report))
+        print(f"\nFull report: {args.out}")
         return
     if args.cmd == "db-info":
         from .ingest_docs import format_stats

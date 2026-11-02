@@ -81,6 +81,26 @@ question, follow-ups, and six that the documents cannot answer (including a dres
 `tests/test_doc_questions.py` checks the **answer key**: each expected fact must exist in the stored text of the PDF, the DOCX and
 the TXT. These questions have not been run through the retrieval pipeline yet.
 
+### Baseline on the 50 document questions (offline mode, untuned)
+
+```bash
+python3 -m agentic_rag eval-docs      # 50 questions x PDF, DOCX, TXT = 150 runs; writes reports/docs_latest.json
+```
+
+| | Result |
+|---|---|
+| Pass rate | **36%** (54 of 150 runs); identical for PDF, DOCX and TXT, and the same questions pass in all three |
+| Right section chosen (top-1 / top-3) | 39% / 64% (a chunk-level search over the same data reaches 65% / 79%) |
+| When it answers an answerable question, it is right | 70% (42 of 60) |
+| Refused or asked instead of answering an answerable question | 69 of 129 runs |
+| Multi-part questions | 0 of 36 pass; 3 of 75 expected facts found |
+| Unanswerable questions correctly refused | 50% (the dress-code trap 3 of 3; chart-only 0 of 6) |
+
+Where the 43 answerable TXT questions break: 16 never reach the right section as a candidate (branch scoring uses only subsection
+titles, and some titles are cut at the first colon, e.g. `5.4 UNSTRUCTURED POLICY PROSE`); 9 reach it but are refused or answered
+with a clarifying question; 3 pick the right section but return the wrong part of it; 1 answers from the wrong section; 14 pass.
+The raw report is `reports/docs_baseline.json`.
+
 ### Known limits of this step
 
 - **Charts are not searchable.** The PDF and DOCX contain 2 chart images whose numbers (SLA hours, control counts,
