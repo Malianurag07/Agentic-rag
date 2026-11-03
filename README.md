@@ -4,6 +4,8 @@ A working implementation of the pipeline in [`Agentic_RAG_Pipeline_Plan.pdf`](Ag
 hierarchical retrieval (**topic > type > text**) controlled by an agent loop that scores, decides, checks its own evidence,
 retries, and says "I don't know" when it should.
 
+**New to the code?** Read the line-by-line [code walkthrough](docs/walkthrough/README.md): every file explained section by section in plain English, in the order the data flows.
+
 Background reading: [`AGENTIC_RAG_EXPLAINED.md`](AGENTIC_RAG_EXPLAINED.md), [`RAG_AND_AGENTIC_RAG_DEEP_DIVE.md`](RAG_AND_AGENTIC_RAG_DEEP_DIVE.md).
 
 ## Quick start
